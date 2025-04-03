@@ -97,9 +97,30 @@ namespace WinFormsApp1
     }
 };
 
+        private void LoadApplications()
+        {
+            if (File.Exists(jsonFilePath))
+            {
+                try
+                {
+                    string json = File.ReadAllText(jsonFilePath);
+                    ProggrammDirectory = JsonConvert.DeserializeObject<Dictionary<int, string>>(json) ?? new Dictionary<int, string>();
+                }
+                catch (Exception ex)
+                {
+                    listBox1.Items.Add($"⚠ Ошибка при загрузке приложений: {ex.Message}");
+                    ProggrammDirectory = new Dictionary<int, string>();
+                }
+            }
+            else
+            {
+                ProggrammDirectory = new Dictionary<int, string>();
+            }
+        }
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            LoadApplications();
             AddUpdate("Лента обновлений загружена.");
         }
 
@@ -395,7 +416,14 @@ namespace WinFormsApp1
                 Ap12p(command);
                 currentStage = InputStage.None;
             }
-
+            else if ( command == "11")
+            {
+                listBox1.Items.Add("Сохраненные пути к приложениям:");
+                foreach (var entry in ProggrammDirectory)
+                {
+                    listBox1.Items.Add($"[{entry.Key}] - {entry.Value}");
+                }
+            }
             else if (command == "стоп")
             {
                 if (isTimeShowing)
@@ -417,13 +445,19 @@ namespace WinFormsApp1
             }
         }
 
-        private void Ap12p(String Apper)
+        private void Ap12p(string appPath)
         {
-            string addProgramm = textBox1.Text.Trim();
+            if (string.IsNullOrWhiteSpace(appPath))
+            {
+                listBox1.Items.Add("⚠ Ошибка: путь не может быть пустым.");
+                return;
+            }
+
             int key = ProggrammDirectory.Count + 1;
-            ProggrammDirectory.Add(key, addProgramm);
+            ProggrammDirectory[key] = appPath;
             SaveApplications();
-            listBox1.Items.Add("Приложение добавлено и сохранено.");
+
+            listBox1.Items.Add($"✅ Приложение \"{appPath}\" добавлено и сохранено.");
         }
         private void SaveApplications()
         {
