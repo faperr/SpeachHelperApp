@@ -24,7 +24,7 @@ namespace WinFormsApp1
         private string proksi = @"C:\\Program Files\\Hiddify\\Hiddify.exe";
         private string discord = @"C:\\Users\\gvyu3\\AppData\\Local\\Discord\\app-1.0.9180\\Discord.exe";
         private string taskmgr = @"C:\\Windows\\System32\\taskmgr.exe";
-        private enum InputStage { None, WaitingForQuery, WaitingForSearchEngine, WaitingForBrightness, WaitingForSound , WaitingApp, LoadApp, SaveApp}
+        private enum InputStage { None, WaitingForQuery, WaitingForSearchEngine, WaitingForBrightness, WaitingForSound , WaitingApp, LoadApp, SaveApp, WaitingForAppNumberToLaunch }
         private InputStage currentStage = InputStage.None;
         private string savedQuery = "";
 
@@ -339,6 +339,8 @@ namespace WinFormsApp1
             }
         }
 
+        string currentFilePath = "";
+
         private async Task ExecuteCommand(string command)
         {
             command = command.Trim().ToLower();
@@ -424,6 +426,51 @@ namespace WinFormsApp1
                     listBox1.Items.Add($"[{entry.Key}] - {entry.Value}");
                 }
             }
+            else if ( command == "12")
+            {
+                listBox1.Items.Add("Выберите номер приложения для запуска:");
+                foreach (var entry in ProggrammDirectory)
+                {
+                    listBox1.Items.Add($"[{entry.Key}] - {entry.Value}");
+                }
+                currentStage = InputStage.WaitingForAppNumberToLaunch;
+            }
+            else if (command == "13")
+            {
+
+            }
+            else if (currentStage == InputStage.WaitingForAppNumberToLaunch)
+            {
+                if (int.TryParse(command, out int selectedKey))
+                {
+                    if (ProggrammDirectory.TryGetValue(selectedKey, out string path))
+                    {
+                        if (File.Exists(path))
+                        {
+                            Process.Start(new ProcessStartInfo
+                            {
+                                FileName = path,
+                                UseShellExecute = true
+                            });
+                            listBox1.Items.Add("Приложение запущено.");
+                        }
+                        else
+                        {
+                            listBox1.Items.Add("Ошибка: Указанный путь не существует.");
+                        }
+                    }
+                    else
+                    {
+                        listBox1.Items.Add("Ошибка: Неверный выбор.");
+                    }
+                }
+                else
+                {
+                    listBox1.Items.Add("Ошибка: Введите корректный номер.");
+                }
+
+                currentStage = InputStage.None;
+            }
             else if (command == "стоп")
             {
                 if (isTimeShowing)
@@ -438,7 +485,6 @@ namespace WinFormsApp1
                     listBox1.Items.Add("Время уже не отображается.");
                 }
             }
-
             else
             {
                 listBox1.Items.Add("Неизвестная команда.");
